@@ -1,11 +1,11 @@
 export const environment = {
   production: true,
   xsighub: {
-    api: 'http://localhost:3000/api',
+    api: 'https://xsighub.azurewebsites.net/api',
     version: 'v=1.0',
     socketIO: {
       namespaces: {
-        sessions: 'ws://localhost:3000/sessions',
+        sessions: 'https://xsighub.azurewebsites.net/sessions',
       },
     },
   },
