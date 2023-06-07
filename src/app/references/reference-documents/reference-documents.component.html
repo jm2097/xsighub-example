@@ -1,0 +1,74 @@
+<div class="mt-8">
+    <h3 class="mb-3 text-xl font-medium">Referencias</h3>
+
+    <div
+        class="my-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800"
+        role="alert"
+    >
+        Seleccione una o varias referencias para asociarlas automáticamente a la sesión.
+    </div>
+
+    <dl
+        *ngFor="let template of templates"
+        class="mt-4 rounded-xl bg-zinc-100 p-4"
+    >
+        <div class="flex flex-col">
+            <dt class="mb-1 text-gray-500">
+                <span class="mx-1">#{{ template.id }}</span>
+                <span class="mx-1">{{ template.name }}</span>
+                <span class="mx-1"> ({{ template.documents?.length ?? 0 }} documentos)</span>
+            </dt>
+
+            <dd class="mt-4 text-lg font-semibold">
+                <details
+                    *ngIf="template.documents?.length"
+                    class="mb-4 rounded-xl bg-zinc-200 p-4"
+                >
+                    <summary>Documentos</summary>
+
+                    <div
+                        *ngFor="let document of template.documents"
+                        class="mt-4 rounded-xl bg-zinc-300 p-4"
+                    >
+                        <h5>{{ document.id }}</h5>
+
+                        <div class="my-4 overflow-x-auto">
+                            <pre>{{ document.rawContent }}</pre>
+                        </div>
+
+                        <div
+                            *ngIf="document.metadata"
+                            class="my-4 overflow-x-auto"
+                        >
+                            <pre>{{ parseMetadata(document.metadata) }}</pre>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="flex items-center gap-2">
+                    <button
+                        *ngIf="!template.id"
+                        class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-blue-400"
+                        (click)="createReference.emit(template)"
+                    >
+                        Crear referencia
+                    </button>
+
+                    <button
+                        *ngIf="template.id"
+                        class="inline-flex items-center rounded-md bg-red-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-red-400"
+                        (click)="deleteReference.emit(template.id)"
+                    >
+                        Eliminar referencia
+                    </button>
+
+                    <button
+                        class="inline-flex items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-zinc-950"
+                    >
+                        Ver plantilla
+                    </button>
+                </div>
+            </dd>
+        </div>
+    </dl>
+</div>

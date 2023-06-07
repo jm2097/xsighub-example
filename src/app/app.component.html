@@ -1,0 +1,228 @@
+<app-toolbar>
+    <button
+        *ngIf="session()"
+        type="button"
+        class="inline-flex items-center rounded-md bg-red-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-red-400"
+        (click)="destroySession()"
+    >
+        Destruir sesión
+    </button>
+</app-toolbar>
+
+<main class="mx-auto mt-12 max-w-screen-lg">
+    <ng-container *ngIf="session() as currentSession; else noSession">
+        <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <app-qr-view [code]="currentSession.pairingKey" />
+
+            <div class="col-span-2">
+                <app-connection-info [session]="currentSession" />
+            </div>
+        </section>
+
+        <section class="mt-6 grid grid-cols-1 gap-6">
+            <app-references
+                [session]="currentSession"
+                (createReference)="handleCreateReference($event)"
+                (deleteReference)="handleDeleteReference($event)"
+            />
+        </section>
+    </ng-container>
+
+    <ng-template #noSession>
+        <div class="mt-36 grid place-items-center">
+            <button
+                type="button"
+                class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-blue-400"
+                (click)="createSession()"
+            >
+                Crear sesión
+            </button>
+        </div>
+    </ng-template>
+</main>
+
+<!-- {{ session() | json }} -->
+
+<!-- <header class="h-[70px] bg-zinc-950 text-zinc-200 shadow-xl">
+    <div class="mx-auto flex h-full max-w-screen-lg items-center justify-between px-6">
+        <h1 class="text-3xl font-semibold">Xsighub</h1>
+
+        <div class="flex items-center gap-6">
+            <button
+                *ngIf="!session"
+                type="button"
+                class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-blue-400"
+                (click)="createSession()"
+            >
+                Crear sesión
+            </button>
+
+            <button
+                *ngIf="session"
+                type="button"
+                class="inline-flex items-center rounded-md bg-red-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-red-400"
+                (click)="destroySession()"
+            >
+                Destruir sesión
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="mx-auto my-12 max-w-screen-lg px-6">
+    <ng-container *ngIf="session; else noSession">
+        <app-references (changed)="handleReferenceChanges($event)" />
+
+        <section class="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            <div class="rounded-xl border-2 border-dashed">
+                <div
+                    #qrContainer
+                    class="h-auto max-w-xs"
+                ></div>
+            </div>
+
+            <div class="connection rounded-xl border-2 border-dashed p-6 lg:col-span-2">
+                <h3 class="mb-6 text-xl font-medium">Conexión</h3>
+
+                <ul class="flex flex-col gap-y-3">
+                    <li class="rounded-xl border-l-8 border-zinc-200 bg-zinc-100 p-3">
+                        <span class="text-zinc-500"> Código </span>
+                        <span class="block text-6xl text-indigo-600">
+                            {{ session.pairingKey }}
+                        </span>
+                    </li>
+                    <li class="rounded-xl border-l-8 border-zinc-200 bg-zinc-100 p-3">
+                        <span class="text-zinc-500"> IP (Cliente) </span>
+                        <span class="block text-zinc-950">
+                            {{ session.connection?.clientIp }}
+                        </span>
+                    </li>
+                    <li class="rounded-xl border-l-8 border-zinc-200 bg-zinc-100 p-3">
+                        <span class="text-zinc-500"> User-Agent </span>
+                        <span class="block text-zinc-950">
+                            {{ session.connection?.userAgent }}
+                        </span>
+                    </li>
+                    <ng-container *ngIf="session.connection?.isPaired; else notPaired">
+                        <li
+                            *ngIf="session.connection?.isPaired"
+                            class="rounded-xl border-l-8 border-zinc-200 bg-zinc-100 p-3"
+                        >
+                            <span class="text-zinc-500"> Fecha de vinculación </span>
+
+                            <span class="flex items-center gap-2 text-zinc-950">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-green-500">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+
+                                {{ session.connection?.pairedAt | date : 'full' }}
+                            </span>
+                        </li>
+                    </ng-container>
+                    <ng-template #notPaired>
+                        <li class="rounded-xl border-l-8 border-zinc-200 bg-zinc-100 p-3">
+                            <span class="relative mr-3 inline-flex h-3 w-3">
+                                <span
+                                    class="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-700"
+                                >
+                                </span>
+                            </span>
+
+                            <span class="text-zinc-950"> Escuchando conexiones entrantes </span>
+                        </li>
+                    </ng-template>
+                </ul>
+            </div>
+        </section>
+
+        <ng-container *ngIf="session.connection?.isPaired">
+            <section class="mt-6 rounded-xl border-2 border-dashed p-12">
+                <h3 class="mb-6 text-xl font-medium">
+                    Firma {{ selectedUser && 'de ' + selectedUser }}
+                </h3>
+
+                <ng-container *ngIf="session.data?.payload; else noSignature">
+                    <img
+                        [src]="session.data?.payload?.toString()"
+                        alt="Firma del usuario"
+                        class="h-[300px] w-full border-4 border-double bg-black object-scale-down"
+                    />
+                </ng-container>
+                <ng-template #noSignature>
+                    <button
+                        type="button"
+                        class="inline-flex cursor-not-allowed items-center rounded-md bg-indigo-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-indigo-400"
+                        disabled
+                    >
+                        <ng-container *ngTemplateOutlet="spinner"></ng-container>
+
+                        Procesando firma
+                    </button>
+                </ng-template>
+            </section>
+        </ng-container>
+    </ng-container>
+
+    <ng-template #noSession>
+        <section class="mt-6 rounded-xl border-2 border-dashed p-12">
+            <h3 class="mb-6 text-xl font-medium">Usuarios (Crear sesión)</h3>
+
+            <div class="flex flex-col gap-4">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-rose-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-rose-400"
+                    (click)="handleUserSelection('Pedro')"
+                >
+                    Pedro
+                </button>
+
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-rose-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-rose-400"
+                    (click)="handleUserSelection('María')"
+                >
+                    María
+                </button>
+
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-rose-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-rose-400"
+                    (click)="handleUserSelection('Lucas')"
+                >
+                    Lucas
+                </button>
+
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-rose-500 px-4 py-2 text-sm font-semibold leading-6 text-white shadow transition duration-150 ease-in-out hover:bg-rose-400"
+                    (click)="handleUserSelection('Sofía')"
+                >
+                    Sofía
+                </button>
+            </div>
+        </section>
+    </ng-template>
+</div>
+
+<ng-template #spinner>
+    <svg
+        class="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+    >
+        <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+        ></circle>
+        <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+    </svg>
+</ng-template> -->

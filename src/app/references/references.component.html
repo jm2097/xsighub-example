@@ -1,0 +1,13 @@
+<section class="grid grid-cols-1 rounded-xl border-2 border-dashed p-6 lg:col-span-2">
+    <app-reference-signatures
+        [session]="session"
+        (createReference)="handleReferenceCreation()"
+        (deleteReference)="handleReferenceDeletion($event)"
+    />
+
+    <app-reference-documents
+        [session]="session"
+        (createReference)="handleReferenceCreation($event)"
+        (deleteReference)="handleReferenceDeletion($event)"
+    />
+</section>
