@@ -1,21 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
 import {
+    OpenReferenceRequest,
     Session,
     SessionDocument,
     SessionReference,
     SessionSignature,
-    __sessionSocketEvents__,
+    __serverEvents__,
+    __webEvents__,
 } from '@ekisa-xsighub/core';
-import { client } from '@ekisa-xsighub/sdk';
 import { randAvatar, randCountry, randEmail, randFullName, randRole } from '@ngneat/falso';
 import { Socket } from 'ngx-socket-io';
 import { map, tap } from 'rxjs';
-import { environment } from 'src/environments/environment.development';
 import { ConnectionInfoComponent } from './connection-info/connection-info.component';
 import { QrViewComponent } from './qr-view/qr-view.component';
 import { ReferencesComponent } from './references/references.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
+import { XsighubService } from './xsighub.service';
 
 type SocketEvent = {
     message: string;
@@ -42,14 +43,9 @@ export class AppComponent implements OnInit {
     @ViewChild('qrContainer') qrContainer!: ElementRef<HTMLDivElement>;
 
     private readonly _socket = inject(Socket);
-
-    private readonly _sdk = client.init({
-        api: environment.xsighub.api,
-        version: environment.xsighub.version,
-    });
+    private readonly _xsighubService = inject(XsighubService);
 
     pairingKey = signal<string | null>(null);
-
     session = signal<Session | null>(null);
 
     constructor() {
@@ -66,7 +62,7 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this._sdk.sessions
+        this._xsighubService.client.sessions
             .findByIpAddress()
             .then((session) => this.session.set(session))
             .catch(console.warn);
@@ -74,12 +70,12 @@ export class AppComponent implements OnInit {
         this._setupSocketEvents();
     }
 
-    createSession = () => this._sdk.sessions.create().catch(alert);
+    createSession = () => this._xsighubService.client.sessions.create().catch(alert);
 
-    destroySession = () => this._sdk.sessions.destroy().catch(alert);
+    destroySession = () => this._xsighubService.client.sessions.destroy().catch(alert);
 
-    handleCreateReference(reference: SessionReference): void {
-        this._sdk.references.create({
+    createReference(reference: SessionReference): void {
+        this._xsighubService.client.references.create({
             type: reference.type,
             name: reference.name,
             documentPlaceholder: reference.documentPlaceholder,
@@ -87,21 +83,25 @@ export class AppComponent implements OnInit {
         });
     }
 
-    handleDeleteReference(referenceId: number): void {
+    deleteReference(referenceId: number): void {
         if (
             confirm(
                 'Si se elimina una referencia, se pierden todas las firmas y documentos asociados. ¿Desea continuar?',
             )
         ) {
-            this._sdk.references.delete(referenceId);
+            this._xsighubService.client.references.delete(referenceId);
         }
+    }
+
+    openReference(request: OpenReferenceRequest): void {
+        this._socket.emit(__webEvents__.openReference, request);
     }
 
     private _setupSocketEvents(): void {
         [
-            __sessionSocketEvents__.created,
-            __sessionSocketEvents__.paired,
-            __sessionSocketEvents__.unpaired,
+            __serverEvents__.sessionCreated,
+            __serverEvents__.sessionPaired,
+            __serverEvents__.sessionUnpaired,
         ].forEach((event) =>
             this._socket
                 .fromEvent<SocketEvent>(event)
@@ -113,13 +113,13 @@ export class AppComponent implements OnInit {
         );
 
         this._socket
-            .fromEvent<SocketEvent>(__sessionSocketEvents__.updated)
+            .fromEvent<SocketEvent>(__serverEvents__.sessionUpdated)
             .pipe(tap(({ message }) => console.log(message)))
             .subscribe(({ session, source, action, data }) => {
                 this.session.set(session);
 
                 if (source === 'document' && action === 'create' && data) {
-                    client.documents.loadMetadata(data.id, {
+                    this._xsighubService.client.documents.loadMetadata(data.id, {
                         ingest: {
                             paciente: randFullName(),
                             pacienteAvatar: randAvatar(),
@@ -136,8 +136,13 @@ export class AppComponent implements OnInit {
             });
 
         this._socket
-            .fromEvent<SocketEvent>(__sessionSocketEvents__.destroyed)
+            .fromEvent<SocketEvent>(__serverEvents__.sessionDestroyed)
             .pipe(tap(({ message }) => console.log(message)))
             .subscribe(() => this.session.set(null));
+
+        this._socket
+            .fromEvent<SocketEvent>(__serverEvents__.referenceOpenedRequested)
+            .pipe(tap(console.log))
+            .subscribe();
     }
 }

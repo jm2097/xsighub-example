@@ -3,11 +3,13 @@
         [session]="session"
         (createReference)="handleReferenceCreation()"
         (deleteReference)="handleReferenceDeletion($event)"
+        (openReference)="handleReferenceOpening($event)"
     />
 
     <app-reference-documents
         [session]="session"
         (createReference)="handleReferenceCreation($event)"
         (deleteReference)="handleReferenceDeletion($event)"
+        (openReference)="handleReferenceOpening($event)"
     />
 </section>

@@ -8,8 +8,7 @@ import {
     ViewChild,
     inject,
 } from '@angular/core';
-import { client } from '@ekisa-xsighub/sdk';
-import { environment } from 'src/environments/environment.development';
+import { XsighubService } from '../xsighub.service';
 
 @Component({
     selector: 'app-qr-view',
@@ -23,17 +22,13 @@ export class QrViewComponent implements OnChanges {
     @ViewChild('qrWrapper') qrWrapper!: ElementRef<HTMLDivElement>;
 
     private readonly _renderer = inject(Renderer2);
-
-    private readonly _sdk = client.init({
-        api: environment.xsighub.api,
-        version: environment.xsighub.version,
-    });
+    private readonly _xsighubService = inject(XsighubService);
 
     async ngOnChanges(): Promise<void> {
         if (this.code) {
             if (this.qrWrapper?.nativeElement.hasChildNodes()) return;
 
-            const qrCode = await this._sdk.qr.generate(this.code);
+            const qrCode = await this._xsighubService.client.qr.generate(this.code);
 
             this._renderer.appendChild(
                 this.qrWrapper?.nativeElement,
