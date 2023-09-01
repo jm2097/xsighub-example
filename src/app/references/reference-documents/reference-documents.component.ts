@@ -2,19 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import {
-  OpenReferenceRequest,
-  Session,
-  SessionDocument,
-  SessionReference,
-  SessionSignature,
+    OpenReferenceRequest,
+    Session,
+    SessionDocument,
+    SessionReference,
+    SessionSignature,
 } from '@ekisa-xsighub/core';
-import {
-  randAvatar,
-  randCountry,
-  randEmail,
-  randFullName,
-  randRole,
-} from '@ngneat/falso';
+import { randAvatar, randCountry, randEmail, randFullName, randRole } from '@ngneat/falso';
 import { marked } from 'marked';
 import { XsighubService } from 'src/app/xsighub.service';
 import { DOC_1 } from '../docs/doc1';
@@ -24,162 +18,153 @@ import { DOC_4 } from '../docs/doc4';
 import { DOC_5 } from '../docs/doc5';
 
 @Component({
-  selector: 'app-reference-documents',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './reference-documents.component.html',
+    selector: 'app-reference-documents',
+    standalone: true,
+    imports: [CommonModule],
+    templateUrl: './reference-documents.component.html',
 })
 export class ReferenceDocumentsComponent {
-  @Input({ required: true }) session!: Session;
+    @Input({ required: true }) session!: Session;
 
-  @Output() createReference = new EventEmitter<SessionReference>();
-  @Output() deleteReference = new EventEmitter<number>();
-  @Output() openReference = new EventEmitter<OpenReferenceRequest>();
+    @Output() createReference = new EventEmitter<SessionReference>();
+    @Output() deleteReference = new EventEmitter<number>();
+    @Output() openReference = new EventEmitter<OpenReferenceRequest>();
 
-  private readonly _sanitizer = inject(DomSanitizer);
-  private readonly _xsighubService = inject(XsighubService);
+    private readonly _sanitizer = inject(DomSanitizer);
+    private readonly _xsighubService = inject(XsighubService);
 
-  get documentReferences(): SessionReference[] {
-    return (
-      this.session?.references?.filter((ref) => ref.type === 'document') ?? []
-    );
-  }
-
-  get templates(): SessionReference[] {
-    const generatedTemplates: SessionReference[] = [];
-
-    const templatesNames: Record<string, string> = {
-      doc1: 'Consentimientos informados',
-      doc2: 'Ejercicios de terapia física',
-      doc3: 'Historial médico',
-      doc4: 'Instrucciones de la receta',
-      doc5: 'Resultados de exámenes de laboratorio',
-    };
-
-    const placeholders: Record<string, string> = {
-      doc1: DOC_1,
-      doc2: DOC_2,
-      doc3: DOC_3,
-      doc4: DOC_4,
-      doc5: DOC_5,
-    };
-
-    for (const key of Object.keys(templatesNames)) {
-      const referenceName = templatesNames[key];
-
-      generatedTemplates.push({
-        id: this._findReferenceId(referenceName),
-        type: 'document',
-        name: referenceName,
-        documentPlaceholder: placeholders[key],
-        signatures: this._findReferenceSignatures(referenceName),
-        documents: this._findReferenceDocuments(referenceName),
-        sessionId: this.session.id,
-      });
+    get documentReferences(): SessionReference[] {
+        return this.session?.references?.filter((ref) => ref.type === 'document') ?? [];
     }
 
-    return generatedTemplates;
-  }
+    get templates(): SessionReference[] {
+        const generatedTemplates: SessionReference[] = [];
 
-  isPreviewOpened = true;
+        const templatesNames: Record<string, string> = {
+            doc1: 'Consentimientos informados',
+            doc2: 'Ejercicios de terapia física',
+            doc3: 'Historial médico',
+            doc4: 'Instrucciones de la receta',
+            doc5: 'Resultados de exámenes de laboratorio',
+        };
 
-  parseMetadata = (metadata: string) =>
-    JSON.stringify(JSON.parse(metadata), undefined, 2);
+        const placeholders: Record<string, string> = {
+            doc1: DOC_1,
+            doc2: DOC_2,
+            doc3: DOC_3,
+            doc4: DOC_4,
+            doc5: DOC_5,
+        };
 
-  parseMarkdown = (rawContent: string, metadata: string) => {
-    console.log({
-      rawContent,
-      metadata,
-    });
+        for (const key of Object.keys(templatesNames)) {
+            const referenceName = templatesNames[key];
 
-    return this._sanitizer.bypassSecurityTrustHtml(
-      marked.parse(
-        this._xsighubService.client.documents.populateMetadata(rawContent, {
-          ingest: JSON.parse(metadata || '{}'),
-        })
-      )
-    );
-  };
+            generatedTemplates.push({
+                id: this._findReferenceId(referenceName),
+                type: 'document',
+                name: referenceName,
+                documentPlaceholder: placeholders[key],
+                signatures: this._findReferenceSignatures(referenceName),
+                documents: this._findReferenceDocuments(referenceName),
+                sessionId: this.session.id,
+            });
+        }
 
-  extractSignatures(rawContent: string): {
-    current: number;
-    total: number;
-    entries: [string, string][];
-  } {
-    const signatures =
-      this._xsighubService.client.documents.extractSignatures(rawContent);
-    const entries = Object.entries(signatures);
+        return generatedTemplates;
+    }
 
-    return {
-      current: entries.filter((entry) => !!entry[1]).length,
-      total: entries.length,
-      entries,
-    };
-  }
+    isPreviewOpened = true;
 
-  trackByTemplate(_index: number, template: SessionReference) {
-    return template.id;
-  }
+    parseMetadata = (metadata: string) => JSON.stringify(JSON.parse(metadata), undefined, 2);
 
-  trackByDocument(_index: number, document: SessionDocument) {
-    return document.id;
-  }
-
-  async handleReferenceOpening(
-    template: SessionReference,
-    document?: SessionDocument
-  ) {
-    const referenceId = this._findReferenceId(template.name);
-
-    if (document) {
-      this.openReference.emit({
-        kind: 'document',
-        referenceId,
-        documentId: document.id,
-      });
-    } else {
-      const { id: documentId } =
-        await this._xsighubService.client.documents.create({
-          referenceId,
-          rawContent: template.documentPlaceholder ?? '',
+    parseMarkdown = (rawContent: string, metadata: string) => {
+        console.log({
+            rawContent,
+            metadata,
         });
 
-      await this._xsighubService.client.documents.loadMetadata(documentId, {
-        ingest: {
-          paciente: randFullName(),
-          pacienteAvatar: randAvatar(),
-          pacientePais: randCountry(),
-          acudiente: randFullName({ gender: 'female' }),
-          acudienteAvatar: randAvatar(),
-          acudienteEmail: randEmail(),
-          medico: randFullName(),
-          medicoAvatar: randAvatar(),
-          medicoRol: randRole(),
-        },
-      });
+        return this._sanitizer.bypassSecurityTrustHtml(
+            marked.parse(
+                this._xsighubService.client.documents.populateMetadata(rawContent, {
+                    ingest: JSON.parse(metadata || '{}'),
+                }),
+                {
+                    mangle: false,
+                    headerIds: false,
+                },
+            ),
+        );
+    };
 
-      this.openReference.emit({
-        kind: 'document',
-        referenceId,
-        documentId,
-      });
+    extractSignatures(rawContent: string): {
+        current: number;
+        total: number;
+        entries: [string, string][];
+    } {
+        const signatures = this._xsighubService.client.documents.extractSignatures(rawContent);
+        const entries = Object.entries(signatures);
+
+        return {
+            current: entries.filter((entry) => !!entry[1]).length,
+            total: entries.length,
+            entries,
+        };
     }
-  }
 
-  private _findReferenceId(name: string): number {
-    return this.session.references?.find((ref) => ref.name === name)?.id ?? 0;
-  }
+    trackByTemplate(_index: number, template: SessionReference) {
+        return template.id;
+    }
 
-  private _findReferenceSignatures(name: string): SessionSignature[] {
-    return (
-      this.session.references?.find((ref) => ref.name === name)?.signatures ??
-      []
-    );
-  }
+    trackByDocument(_index: number, document: SessionDocument) {
+        return document.id;
+    }
 
-  private _findReferenceDocuments(name: string): SessionDocument[] {
-    return (
-      this.session.references?.find((ref) => ref.name === name)?.documents ?? []
-    );
-  }
+    async handleReferenceOpening(template: SessionReference, document?: SessionDocument) {
+        const referenceId = this._findReferenceId(template.name);
+
+        if (document) {
+            this.openReference.emit({
+                kind: 'document',
+                referenceId,
+                documentId: document.id,
+            });
+        } else {
+            const { id: documentId } = await this._xsighubService.client.documents.create({
+                referenceId,
+                rawContent: template.documentPlaceholder ?? '',
+            });
+
+            await this._xsighubService.client.documents.loadMetadata(documentId, {
+                ingest: {
+                    paciente: randFullName(),
+                    pacienteAvatar: randAvatar(),
+                    pacientePais: randCountry(),
+                    acudiente: randFullName({ gender: 'female' }),
+                    acudienteAvatar: randAvatar(),
+                    acudienteEmail: randEmail(),
+                    medico: randFullName(),
+                    medicoAvatar: randAvatar(),
+                    medicoRol: randRole(),
+                },
+            });
+
+            this.openReference.emit({
+                kind: 'document',
+                referenceId,
+                documentId,
+            });
+        }
+    }
+
+    private _findReferenceId(name: string): number {
+        return this.session.references?.find((ref) => ref.name === name)?.id ?? 0;
+    }
+
+    private _findReferenceSignatures(name: string): SessionSignature[] {
+        return this.session.references?.find((ref) => ref.name === name)?.signatures ?? [];
+    }
+
+    private _findReferenceDocuments(name: string): SessionDocument[] {
+        return this.session.references?.find((ref) => ref.name === name)?.documents ?? [];
+    }
 }

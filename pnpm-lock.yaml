@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   '@angular/animations':
     specifier: ^16.0.2
@@ -26,11 +30,11 @@ dependencies:
     specifier: ^16.0.2
     version: 16.0.2(@angular/common@16.0.2)(@angular/core@16.0.2)(@angular/platform-browser@16.0.2)(rxjs@7.8.0)
   '@ekisa-xsighub/core':
-    specifier: ^0.2.3-beta
-    version: 0.2.3-beta
+    specifier: ^0.3.0
+    version: 0.3.0
   '@ekisa-xsighub/sdk':
-    specifier: ^0.2.3-beta
-    version: 0.2.3-beta
+    specifier: ^0.3.0
+    version: 0.3.0
   '@ngneat/falso':
     specifier: ^6.4.0
     version: 6.4.0
@@ -1738,14 +1742,14 @@ packages:
     engines: {node: '>=10.0.0'}
     dev: true
 
-  /@ekisa-xsighub/core@0.2.3-beta:
-    resolution: {integrity: sha512-18LUVbBJZdvk+47cFnOtdnLxfK/xUoOwz+z9m6ITcPM/DaovxxFZB96h1hzOEDviTuFVhc9l+RfHPTehRFLntQ==}
+  /@ekisa-xsighub/core@0.3.0:
+    resolution: {integrity: sha512-j0urIBRZKELpO/irenaubXKRVq7Wlk3ne1TX+/UreHQ1VGRAh6CgqI5Gge0aTglB3+h0udYdBqut3Wu/KFQvfQ==}
     dev: false
 
-  /@ekisa-xsighub/sdk@0.2.3-beta:
-    resolution: {integrity: sha512-Fq0Zvd8eB/MFNgykSElcb5MclPAHso+sH1c8IutUsv2hA8HyD5Qr8zhgTqGlyY4o0OWMzww3mK5TIKlLPleMGg==}
+  /@ekisa-xsighub/sdk@0.3.0:
+    resolution: {integrity: sha512-KcPZINw8/SEOE2w6QtWi9Eo6hhml64lSkzmrnQHyzdq/BGljgCWKFKfWLWeWiTn7bo14BTTPSZQjzOTSW5ZJTg==}
     dependencies:
-      '@ekisa-xsighub/core': 0.2.3-beta
+      '@ekisa-xsighub/core': 0.3.0
       qrcode: 1.5.3
     dev: false
 
@@ -3415,6 +3419,7 @@ packages:
 
   /debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
+    requiresBuild: true
     peerDependencies:
       supports-color: '*'
     peerDependenciesMeta:
@@ -5308,6 +5313,7 @@ packages:
 
   /node-addon-api@3.2.1:
     resolution: {integrity: sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -5319,6 +5325,7 @@ packages:
   /node-gyp-build@4.6.0:
     resolution: {integrity: sha512-NTZVKn9IylLwUzaKjkas1e4u2DLNcV4rdYagA4PWdPwW87Bi7z+BznyKSRwS/761tV/lzCGXplWsiaMjLqP2zQ==}
     hasBin: true
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -5708,6 +5715,7 @@ packages:
   /pify@4.0.1:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
     engines: {node: '>=6'}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -5925,6 +5933,7 @@ packages:
 
   /prr@1.0.1:
     resolution: {integrity: sha512-yPw4Sng1gWghHQWj0B3ZggWUm4qVbPwPFcRG8KyxiU7J2OHFSoEHKS+EZ3fv5l1t9CyCiop6l/ZYeWbrgoQejw==}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -6250,6 +6259,7 @@ packages:
 
   /sax@1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -6290,6 +6300,7 @@ packages:
   /semver@5.7.1:
     resolution: {integrity: sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==}
     hasBin: true
+    requiresBuild: true
     dev: true
     optional: true
 
