@@ -11,7 +11,7 @@ import {
 } from '@ekisa-xsighub/core';
 import { randAvatar, randCountry, randEmail, randFullName, randRole } from '@ngneat/falso';
 import { Socket } from 'ngx-socket-io';
-import { map, tap } from 'rxjs';
+import { filter, map, tap } from 'rxjs';
 import { ConnectionInfoComponent } from './connection-info/connection-info.component';
 import { QrViewComponent } from './qr-view/qr-view.component';
 import { ReferencesComponent } from './references/references.component';
@@ -26,12 +26,7 @@ type SocketEvent = {
     data?: Session | SessionReference | SessionSignature | SessionDocument;
 };
 
-const COMPONENTS = [
-    ToolbarComponent,
-    QrViewComponent,
-    ReferencesComponent,
-    ConnectionInfoComponent,
-] as const;
+const COMPONENTS = [ToolbarComponent, QrViewComponent, ReferencesComponent, ConnectionInfoComponent] as const;
 
 @Component({
     selector: 'app-root',
@@ -47,6 +42,7 @@ export class AppComponent implements OnInit {
 
     pairingKey = signal<string | null>(localStorage.getItem('pairingKey'));
     session = signal<Session | null>(null);
+    sessionInstanceInteracted = signal(false);
 
     constructor() {
         effect(
@@ -80,7 +76,10 @@ export class AppComponent implements OnInit {
         this._setupSocketEvents();
     }
 
-    createSession = () => this._xsighubService.client.sessions.create().catch(console.error);
+    createSession = () => {
+        this.sessionInstanceInteracted.set(true);
+        this._xsighubService.client.sessions.create().catch(console.error);
+    };
 
     destroySession = () =>
         this._xsighubService.client.sessions
@@ -118,18 +117,20 @@ export class AppComponent implements OnInit {
     }
 
     private _setupSocketEvents(): void {
-        [
-            __serverEvents__.sessionCreated,
-            __serverEvents__.sessionPaired,
-            __serverEvents__.sessionUnpaired,
-        ].forEach((event) =>
-            this._socket
-                .fromEvent<SocketEvent>(event)
-                .pipe(
-                    tap(({ session, message }) => console.log(message, { session })),
-                    map(({ session }) => session),
-                )
-                .subscribe(this.session.set),
+        [__serverEvents__.sessionCreated, __serverEvents__.sessionPaired, __serverEvents__.sessionUnpaired].forEach(
+            (event) =>
+                this._socket
+                    .fromEvent<SocketEvent>(event)
+                    .pipe(
+                        tap(({ session, message }) => console.log(message, { session })),
+                        map(({ session }) => session),
+                    )
+                    .subscribe((session) => {
+                        if (this.sessionInstanceInteracted()) {
+                            this.session.set(session);
+                            this.sessionInstanceInteracted.set(false);
+                        }
+                    }),
         );
 
         this._socket
@@ -157,7 +158,10 @@ export class AppComponent implements OnInit {
 
         this._socket
             .fromEvent<SocketEvent>(__serverEvents__.sessionDestroyed)
-            .pipe(tap(({ message }) => console.log(message)))
+            .pipe(
+                map(({ message }) => message.split(' ')[1]),
+                filter((sessionId) => this.session()?.id === (sessionId as unknown as number)),
+            )
             .subscribe(() => this.session.set(null));
 
         this._socket
