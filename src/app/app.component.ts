@@ -137,22 +137,24 @@ export class AppComponent implements OnInit {
             .fromEvent<SocketEvent>(__serverEvents__.sessionUpdated)
             .pipe(tap(({ message }) => console.log(message)))
             .subscribe(({ session, source, action, data }) => {
-                this.session.set(session);
+                if (session.pairingKey === this.pairingKey()) {
+                    this.session.set(session);
 
-                if (source === 'document' && action === 'create' && data) {
-                    this._xsighubService.client.documents.loadMetadata(data.id, {
-                        ingest: {
-                            paciente: randFullName(),
-                            pacienteAvatar: randAvatar(),
-                            pacientePais: randCountry(),
-                            acudiente: randFullName({ gender: 'female' }),
-                            acudienteAvatar: randAvatar(),
-                            acudienteEmail: randEmail(),
-                            medico: randFullName(),
-                            medicoAvatar: randAvatar(),
-                            medicoRol: randRole(),
-                        },
-                    });
+                    if (source === 'document' && action === 'create' && data) {
+                        this._xsighubService.client.documents.loadMetadata(data.id, {
+                            ingest: {
+                                paciente: randFullName(),
+                                pacienteAvatar: randAvatar(),
+                                pacientePais: randCountry(),
+                                acudiente: randFullName({ gender: 'female' }),
+                                acudienteAvatar: randAvatar(),
+                                acudienteEmail: randEmail(),
+                                medico: randFullName(),
+                                medicoAvatar: randAvatar(),
+                                medicoRol: randRole(),
+                            },
+                        });
+                    }
                 }
             });
 
