@@ -125,6 +125,7 @@ export class ReferenceDocumentsComponent {
         if (document) {
             this.openReference.emit({
                 kind: 'document',
+                sessionId: this.session.id,
                 referenceId,
                 documentId: document.id,
             });
@@ -150,6 +151,7 @@ export class ReferenceDocumentsComponent {
 
             this.openReference.emit({
                 kind: 'document',
+                sessionId: this.session.id,
                 referenceId,
                 documentId,
             });

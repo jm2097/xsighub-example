@@ -30,11 +30,11 @@ dependencies:
     specifier: ^16.0.2
     version: 16.0.2(@angular/common@16.0.2)(@angular/core@16.0.2)(@angular/platform-browser@16.0.2)(rxjs@7.8.0)
   '@ekisa-xsighub/core':
-    specifier: ^0.3.0
-    version: 0.3.0
+    specifier: ^0.4.1
+    version: 0.4.1
   '@ekisa-xsighub/sdk':
-    specifier: ^0.3.0
-    version: 0.3.0
+    specifier: ^0.4.1
+    version: 0.4.1
   '@ngneat/falso':
     specifier: ^6.4.0
     version: 6.4.0
@@ -1742,14 +1742,14 @@ packages:
     engines: {node: '>=10.0.0'}
     dev: true
 
-  /@ekisa-xsighub/core@0.3.0:
-    resolution: {integrity: sha512-j0urIBRZKELpO/irenaubXKRVq7Wlk3ne1TX+/UreHQ1VGRAh6CgqI5Gge0aTglB3+h0udYdBqut3Wu/KFQvfQ==}
+  /@ekisa-xsighub/core@0.4.1:
+    resolution: {integrity: sha512-cx3Ox9rzE80RbKCuesPDPFYZCZngTsyIvT5q3CPAeKRcZUPOw6N0d01Unp2ZkqYOVAsyr9TSwZXhC4QkIHP9GQ==}
     dev: false
 
-  /@ekisa-xsighub/sdk@0.3.0:
-    resolution: {integrity: sha512-KcPZINw8/SEOE2w6QtWi9Eo6hhml64lSkzmrnQHyzdq/BGljgCWKFKfWLWeWiTn7bo14BTTPSZQjzOTSW5ZJTg==}
+  /@ekisa-xsighub/sdk@0.4.1:
+    resolution: {integrity: sha512-fHJyDUyhiBtGp4EXRfClcrtJlab9mem/CNiDtXazE3HGl0j6qjyYFbVgcjQrznSWrm6DnnasT6MYXRus9HAEIg==}
     dependencies:
-      '@ekisa-xsighub/core': 0.3.0
+      '@ekisa-xsighub/core': 0.4.1
       qrcode: 1.5.3
     dev: false
 

@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
+import {
+    Component,
+    ElementRef,
+    HostListener,
+    OnInit,
+    ViewChild,
+    effect,
+    inject,
+    signal,
+} from '@angular/core';
 import {
     OpenReferenceRequest,
     Session,
@@ -11,7 +20,7 @@ import {
 } from '@ekisa-xsighub/core';
 import { randAvatar, randCountry, randEmail, randFullName, randRole } from '@ngneat/falso';
 import { Socket } from 'ngx-socket-io';
-import { filter, map, tap } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { ConnectionInfoComponent } from './connection-info/connection-info.component';
 import { QrViewComponent } from './qr-view/qr-view.component';
 import { ReferencesComponent } from './references/references.component';
@@ -26,7 +35,12 @@ type SocketEvent = {
     data?: Session | SessionReference | SessionSignature | SessionDocument;
 };
 
-const COMPONENTS = [ToolbarComponent, QrViewComponent, ReferencesComponent, ConnectionInfoComponent] as const;
+const COMPONENTS = [
+    ToolbarComponent,
+    QrViewComponent,
+    ReferencesComponent,
+    ConnectionInfoComponent,
+] as const;
 
 @Component({
     selector: 'app-root',
@@ -42,7 +56,6 @@ export class AppComponent implements OnInit {
 
     pairingKey = signal<string | null>(localStorage.getItem('pairingKey'));
     session = signal<Session | null>(null);
-    sessionInstanceInteracted = signal(false);
 
     constructor() {
         effect(
@@ -72,20 +85,35 @@ export class AppComponent implements OnInit {
                     this._cleanupSession();
                 });
         }
-
-        this._setupSocketEvents();
     }
 
-    createSession = () => {
-        this.sessionInstanceInteracted.set(true);
-        this._xsighubService.client.sessions.create().catch(console.error);
-    };
+    @HostListener('window:beforeunload', ['$event'])
+    onBeforeUnload(): void {
+        this.destroySession();
+    }
 
-    destroySession = () =>
+    createSession(): void {
+        this._xsighubService.client.sessions
+            .create()
+            .then((session) => {
+                this.session.set(session);
+
+                this._socket.emit('handshake', {
+                    sessionId: session.id,
+                    client: 'web',
+                });
+
+                this._setupSocketEvents();
+            })
+            .catch(console.error);
+    }
+
+    destroySession(): void {
         this._xsighubService.client.sessions
             .destroy(this.pairingKey() ?? '')
             .then(() => this._cleanupSession())
             .catch(console.error);
+    }
 
     createReference(reference: SessionReference): void {
         this._xsighubService.client.references.create({
@@ -117,53 +145,42 @@ export class AppComponent implements OnInit {
     }
 
     private _setupSocketEvents(): void {
-        [__serverEvents__.sessionCreated, __serverEvents__.sessionPaired, __serverEvents__.sessionUnpaired].forEach(
-            (event) =>
-                this._socket
-                    .fromEvent<SocketEvent>(event)
-                    .pipe(
-                        tap(({ session, message }) => console.log(message, { session })),
-                        map(({ session }) => session),
-                    )
-                    .subscribe((session) => {
-                        if (this.sessionInstanceInteracted()) {
-                            this.session.set(session);
-                            this.sessionInstanceInteracted.set(false);
-                        }
-                    }),
+        [__serverEvents__.sessionPaired, __serverEvents__.sessionUnpaired].forEach((event) =>
+            this._socket
+                .fromEvent<SocketEvent>(event)
+                .pipe(
+                    tap(({ session, message }) => console.log(message, { session })),
+                    map(({ session }) => session),
+                )
+                .subscribe(this.session.set),
         );
 
         this._socket
             .fromEvent<SocketEvent>(__serverEvents__.sessionUpdated)
             .pipe(tap(({ message }) => console.log(message)))
             .subscribe(({ session, source, action, data }) => {
-                if (session.pairingKey === this.pairingKey()) {
-                    this.session.set(session);
+                this.session.set(session);
 
-                    if (source === 'document' && action === 'create' && data) {
-                        this._xsighubService.client.documents.loadMetadata(data.id, {
-                            ingest: {
-                                paciente: randFullName(),
-                                pacienteAvatar: randAvatar(),
-                                pacientePais: randCountry(),
-                                acudiente: randFullName({ gender: 'female' }),
-                                acudienteAvatar: randAvatar(),
-                                acudienteEmail: randEmail(),
-                                medico: randFullName(),
-                                medicoAvatar: randAvatar(),
-                                medicoRol: randRole(),
-                            },
-                        });
-                    }
+                if (source === 'document' && action === 'create' && data) {
+                    this._xsighubService.client.documents.loadMetadata(data.id, {
+                        ingest: {
+                            paciente: randFullName(),
+                            pacienteAvatar: randAvatar(),
+                            pacientePais: randCountry(),
+                            acudiente: randFullName({ gender: 'female' }),
+                            acudienteAvatar: randAvatar(),
+                            acudienteEmail: randEmail(),
+                            medico: randFullName(),
+                            medicoAvatar: randAvatar(),
+                            medicoRol: randRole(),
+                        },
+                    });
                 }
             });
 
         this._socket
             .fromEvent<SocketEvent>(__serverEvents__.sessionDestroyed)
-            .pipe(
-                map(({ message }) => message.split(' ')[1]),
-                filter((sessionId) => this.session()?.id === (sessionId as unknown as number)),
-            )
+            .pipe(tap(({ message }) => console.log(message)))
             .subscribe(() => this.session.set(null));
 
         this._socket

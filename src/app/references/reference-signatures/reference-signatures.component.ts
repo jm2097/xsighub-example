@@ -23,6 +23,7 @@ export class ReferenceSignaturesComponent {
         if (this.standaloneReference?.id) {
             this.openReference.emit({
                 kind: 'standalone',
+                sessionId: this.session.id,
                 referenceId: this.standaloneReference.id,
             });
         }
