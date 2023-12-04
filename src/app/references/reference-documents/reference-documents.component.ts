@@ -78,22 +78,13 @@ export class ReferenceDocumentsComponent {
     parseMetadata = (metadata: string) => JSON.stringify(JSON.parse(metadata), undefined, 2);
 
     parseMarkdown = (rawContent: string, metadata: string) => {
-        console.log({
-            rawContent,
-            metadata,
+        const content = this._xsighubService.client.documents.populateMetadata(rawContent, {
+            ingest: JSON.parse(metadata || '{}'),
         });
 
-        return this._sanitizer.bypassSecurityTrustHtml(
-            marked.parse(
-                this._xsighubService.client.documents.populateMetadata(rawContent, {
-                    ingest: JSON.parse(metadata || '{}'),
-                }),
-                {
-                    mangle: false,
-                    headerIds: false,
-                },
-            ),
-        );
+        const parsed = marked.parse(content, { async: false });
+
+        return this._sanitizer.bypassSecurityTrustHtml(parsed as string);
     };
 
     extractSignatures(rawContent: string): {

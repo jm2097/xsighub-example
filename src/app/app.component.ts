@@ -1,14 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-    Component,
-    ElementRef,
-    HostListener,
-    OnInit,
-    ViewChild,
-    effect,
-    inject,
-    signal,
-} from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
 import {
     OpenReferenceRequest,
     Session,
@@ -35,12 +26,7 @@ type SocketEvent = {
     data?: Session | SessionReference | SessionSignature | SessionDocument;
 };
 
-const COMPONENTS = [
-    ToolbarComponent,
-    QrViewComponent,
-    ReferencesComponent,
-    ConnectionInfoComponent,
-] as const;
+const COMPONENTS = [ToolbarComponent, QrViewComponent, ReferencesComponent, ConnectionInfoComponent] as const;
 
 @Component({
     selector: 'app-root',
@@ -79,17 +65,21 @@ export class AppComponent implements OnInit {
         if (pairingKey) {
             this._xsighubService.client.sessions
                 .findByPairingKey(pairingKey)
-                .then((session) => this.session.set(session))
+                .then((session) => {
+                    this.session.set(session);
+
+                    this._socket.emit('handshake', {
+                        sessionId: session.id,
+                        client: 'web',
+                    });
+
+                    this._setupSocketEvents();
+                })
                 .catch((error) => {
                     console.warn(error);
                     this._cleanupSession();
                 });
         }
-    }
-
-    @HostListener('window:beforeunload', ['$event'])
-    onBeforeUnload(): void {
-        this.destroySession();
     }
 
     createSession(): void {
@@ -125,13 +115,7 @@ export class AppComponent implements OnInit {
     }
 
     deleteReference(referenceId: number): void {
-        if (
-            confirm(
-                'Si se elimina una referencia, se pierden todas las firmas y documentos asociados. ¿Desea continuar?',
-            )
-        ) {
-            this._xsighubService.client.references.delete(referenceId);
-        }
+        this._xsighubService.client.references.delete(referenceId);
     }
 
     openReference(request: OpenReferenceRequest): void {

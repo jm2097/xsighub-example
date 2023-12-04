@@ -5,7 +5,7 @@ export const environment = {
         version: 'v=1.0',
         socketIO: {
             namespaces: {
-                sessions: 'ws://xsighub.azurewebsites.net/sessions',
+                sessions: 'https://xsighub.azurewebsites.net/sessions',
             },
         },
     },
